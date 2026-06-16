@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UBP² — Uncertainty-Balanced Preference Planning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #fafaf8;
+  --bg2:      #f3f2ef;
+  --surface:  #ffffff;
+  --border:   #e2e0db;
+  --border2:  #ccc9c2;
+  --accent:   #2563eb;
+  --accent-light: #eff4ff;
+  --accent2:  #7c3aed;
+  --green:    #16a34a;
+  --text:     #1a1917;
+  --text-mid: #4a4845;
+  --text-dim: #8a8680;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono:  'JetBrains Mono', monospace;
+  --sans:  'Inter', system-ui, sans-serif;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* subtle dot pattern */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, #c8c4bb 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.28;
+}
+
+.container { max-width: 920px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+.container-wide { max-width: 1100px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(250,250,248,0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+nav .inner {
+  max-width: 920px; margin: 0 auto; padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 54px;
+}
+.nav-brand {
+  font-family: var(--mono); font-size: 0.82rem; font-weight: 600;
+  color: var(--accent); text-decoration: none; letter-spacing: 0.04em;
+}
+.nav-links { display: flex; gap: 2rem; }
+.nav-links a {
+  font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+  color: var(--text-mid); text-decoration: none;
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--text); }
+
+/* ── HERO ── */
+#hero {
+  padding: 9rem 0 5rem;
+  border-bottom: 1px solid var(--border);
+}
+.venue-pill {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 500;
+  color: var(--accent); background: var(--accent-light);
+  border: 1px solid #bfcffd; border-radius: 99px;
+  padding: 0.25rem 0.85rem; letter-spacing: 0.04em;
+  margin-bottom: 1.8rem;
+  animation: fadeUp 0.7s ease both;
+}
+.venue-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; }
+h1 {
+  font-family: var(--serif); font-size: clamp(2.6rem, 6vw, 4.8rem);
+  font-weight: 700; line-height: 1.06; letter-spacing: -0.02em;
+  color: var(--text); margin-bottom: 0.35rem;
+  animation: fadeUp 0.7s 0.08s ease both;
+}
+h1 sup {
+  font-family: var(--mono); font-size: 0.42em; font-weight: 600;
+  color: var(--accent); vertical-align: super;
+}
+.hero-full-title {
+  font-family: var(--serif); font-style: italic;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  color: var(--text-mid); margin-bottom: 2.2rem;
+  animation: fadeUp 0.7s 0.14s ease both;
+}
+.authors-line {
+  font-family: var(--sans); font-size: 0.92rem; font-weight: 400;
+  color: var(--text-mid); margin-bottom: 0.35rem;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+.authors-line a { color: var(--accent); text-decoration: none; }
+.authors-line a:hover { text-decoration: underline; }
+.affiliation-line {
+  font-family: var(--sans); font-size: 0.8rem; color: var(--text-dim);
+  margin-bottom: 2.2rem;
+  animation: fadeUp 0.7s 0.24s ease both;
+}
+.hero-actions {
+  display: flex; flex-wrap: wrap; gap: 0.6rem;
+  animation: fadeUp 0.7s 0.3s ease both;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+  padding: 0.6rem 1.3rem; border-radius: var(--radius);
+  text-decoration: none; transition: all 0.15s; border: 1px solid transparent; cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: var(--surface); color: var(--text-mid); border-color: var(--border2); box-shadow: var(--shadow); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── TEASER FIGURE ── */
+.teaser-wrap {
+  margin: 3.5rem 0 0;
+  animation: fadeUp 0.7s 0.38s ease both;
+}
+.teaser-figure {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+.teaser-img-slot {
+  width: 100%;
+  aspect-ratio: 16/6;
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.7rem;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+/* placeholder grid lines */
+.teaser-img-slot::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.5;
+}
+.teaser-img-slot img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+}
+.teaser-placeholder-label {
+  font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim);
+  letter-spacing: 0.08em; position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.teaser-placeholder-label svg { opacity: 0.5; }
+.teaser-caption {
+  padding: 0.9rem 1.4rem;
+  font-family: var(--sans); font-size: 0.82rem; color: var(--text-dim);
+  line-height: 1.6;
+}
+.teaser-caption strong { color: var(--text-mid); font-weight: 500; }
+
+/* ── SECTIONS ── */
+section { padding: 5rem 0; }
+.section-eyebrow {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 0.7rem;
+}
+h2 {
+  font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700; line-height: 1.15; margin-bottom: 1.6rem; color: var(--text);
+}
+h3 {
+  font-family: var(--sans); font-size: 0.88rem; font-weight: 600;
+  color: var(--text); margin-bottom: 0.5rem; letter-spacing: 0.01em;
+}
+p { color: var(--text-mid); font-size: 0.93rem; margin-bottom: 0.9rem; line-height: 1.75; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+/* ── ABSTRACT ── */
+.abstract-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 2rem 2.4rem;
+  box-shadow: var(--shadow); margin-bottom: 2.5rem;
+  border-left: 3px solid var(--accent);
+}
+.abstract-card p { margin-bottom: 0.8rem; }
+.abstract-card p:last-child { margin-bottom: 0; }
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  margin: 2rem 0;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.4rem 1.2rem;
+  box-shadow: var(--shadow); text-align: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.stat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.09); transform: translateY(-2px); }
+.stat-num {
+  font-family: var(--mono); font-size: 1.9rem; font-weight: 600;
+  color: var(--accent); line-height: 1; margin-bottom: 0.4rem; display: block;
+}
+.stat-card p { margin: 0; font-size: 0.8rem; color: var(--text-dim); }
+
+/* ── METHOD FIGURE ── */
+.method-figure {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); margin: 1.5rem 0;
+}
+.method-img-slot {
+  width: 100%; aspect-ratio: 16/7;
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.7rem;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.method-img-slot::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px; opacity: 0.5;
+}
+.method-img-slot img { width:100%; height:100%; object-fit:contain; display:block; }
+.fig-caption {
+  padding: 0.85rem 1.4rem;
+  font-size: 0.8rem; color: var(--text-dim); line-height: 1.6;
+  font-family: var(--sans);
+}
+.fig-caption strong { color: var(--text-mid); font-weight: 600; }
+
+/* ── EQ BOX ── */
+.eq-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem 1.6rem;
+  font-family: var(--mono); font-size: 0.78rem; color: var(--text-mid);
+  overflow-x: auto; line-height: 2; margin: 1.2rem 0; position: relative;
+}
+.eq-label {
+  position: absolute; top: 0.7rem; right: 1rem;
+  font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.08em;
+}
+.ev { color: var(--accent); }
+.ek { color: var(--accent2); }
+
+/* ── ALGORITHM ── */
+.algo-box {
+  background: #fdfcfa; border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); margin: 1.5rem 0;
+  font-family: var(--mono); font-size: 0.77rem;
+}
+.algo-header {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 0.6rem 1.2rem; font-size: 0.68rem; font-weight: 600;
+  color: var(--text-mid); letter-spacing: 0.1em;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.algo-body { padding: 1.2rem 1.4rem; line-height: 2; }
+.al { color: var(--text-dim); min-width: 1.6rem; display: inline-block; user-select: none; font-size: 0.68rem; }
+.ak { color: var(--accent2); font-weight: 500; }
+.ac { color: var(--green); }
+.af { color: var(--accent); }
+.i1 { padding-left: 1.4rem; }
+.i2 { padding-left: 2.8rem; }
+
+/* ── CONTRIB LIST ── */
+.contrib-list { list-style: none; counter-reset: c; }
+.contrib-list li {
+  counter-increment: c;
+  display: flex; gap: 1.1rem;
+  padding: 1.2rem 0; border-bottom: 1px solid var(--border);
+}
+.contrib-list li:last-child { border-bottom: none; }
+.contrib-list li::before {
+  content: "C" counter(c);
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 600;
+  color: var(--surface); background: var(--accent);
+  min-width: 26px; height: 26px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 0.15rem;
+}
+.contrib-list li p { margin: 0; font-size: 0.88rem; }
+
+/* ── RESULTS TABLE ── */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.4rem; }
+.tab {
+  font-family: var(--sans); font-size: 0.78rem; font-weight: 500;
+  color: var(--text-dim); padding: 0.65rem 1.1rem; cursor: pointer;
+  border: none; border-bottom: 2px solid transparent;
+  background: none; transition: all 0.15s; letter-spacing: 0.01em;
+}
+.tab:hover { color: var(--text-mid); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.table-wrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.72rem; background: var(--surface); }
+thead tr { background: var(--bg2); }
+th { text-align: left; padding: 0.65rem 0.9rem; color: var(--text-dim); font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; border-bottom: 1px solid var(--border2); }
+td { padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border); color: var(--text-mid); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg2); }
+tbody tr.best td { background: #f0f5ff; }
+.bold-cell { color: var(--accent) !important; font-weight: 600; }
+.rank-badge {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-weight: 600; padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+.fn { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.6rem; font-family: var(--sans); }
+
+/* ── VIDEO GRID ── */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem; margin: 1.5rem 0;
+}
+.video-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); transition: box-shadow 0.2s, transform 0.2s;
+}
+.video-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.09); transform: translateY(-2px); }
+.video-slot {
+  width: 100%; aspect-ratio: 16/9;
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; overflow: hidden; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+/* grid bg for placeholder */
+.video-slot::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 30px 30px; opacity: 0.6;
+}
+/* play button */
+.video-slot::after {
+  content: '';
+  position: relative; z-index: 2;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 55% 50%;
+  background-size: 22px 22px;
+}
+/* when a real video is present, hide ::after */
+.video-slot video { width:100%; height:100%; object-fit:cover; display:block; position:absolute; inset:0; }
+.video-slot video ~ *::after { display: none; }
+.video-slot .vid-label {
+  position: absolute; bottom: 0.5rem; left: 0.7rem; z-index: 3;
+  font-family: var(--mono); font-size: 0.62rem; color: var(--text-dim);
+  background: rgba(250,250,248,0.85); padding: 0.15rem 0.4rem; border-radius: 3px;
+}
+.video-info { padding: 0.8rem 1rem; }
+.video-info .task-name {
+  font-family: var(--sans); font-size: 0.82rem; font-weight: 600;
+  color: var(--text); margin-bottom: 0.2rem;
+}
+.video-info .task-budget {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim);
+}
+.video-info .task-score {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--accent);
+  font-weight: 600; margin-top: 0.25rem;
+}
+
+/* ── THEORY ── */
+.theory-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;
+}
+.theory-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.4rem 1.6rem;
+  box-shadow: var(--shadow);
+}
+.theory-card h3 { margin-bottom: 0.8rem; }
+.theory-card p { font-size: 0.85rem; margin-bottom: 0.5rem; }
+
+/* ── CITATION ── */
+.citation-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.4rem 1.8rem;
+  font-family: var(--mono); font-size: 0.76rem;
+  color: var(--text-mid); line-height: 1.85; position: relative;
+}
+.copy-btn {
+  position: absolute; top: 0.9rem; right: 1rem;
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 600;
+  color: var(--accent); background: var(--accent-light);
+  border: 1px solid #bfcffd; border-radius: 3px;
+  padding: 0.25rem 0.6rem; cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em;
+}
+.copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.copy-btn.copied { background: #dcfce7; color: var(--green); border-color: #86efac; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 2rem 0; text-align: center;
+  font-size: 0.78rem; color: var(--text-dim);
+}
+footer a { color: var(--text-dim); text-decoration: none; }
+footer a:hover { color: var(--accent); }
+
+/* ── TAGS ── */
+.tag {
+  display: inline-block; font-family: var(--mono); font-size: 0.65rem;
+  font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 99px;
+  letter-spacing: 0.06em;
+}
+.tag-blue { background: var(--accent-light); color: var(--accent); border: 1px solid #bfcffd; }
+.tag-purple { background: #f5f0ff; color: var(--accent2); border: 1px solid #d4b8fd; }
+.tag-green { background: #f0fdf4; color: var(--green); border: 1px solid #86efac; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.65s ease, transform 0.65s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .theory-grid { grid-template-columns: 1fr; }
+  .video-grid { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 2.4rem; }
+}
+@media (max-width: 420px) {
+  .video-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="inner">
+    <a class="nav-brand" href="#">UBP²</a>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#videos">Videos</a>
+      <a href="#theory">Theory</a>
+      <a href="#citation">Citation</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="venue-pill"><span class="venue-dot"></span>LEAF Lab · University of Toronto</div>
+    <h1>UBP<sup>2</sup></h1>
+    <div class="hero-full-title">Uncertainty-Balanced Preference Planning</div>
+    <div class="authors-line">
+      Mohamed Nabail &nbsp;&middot;&nbsp;
+      Leo Cheng* &nbsp;&middot;&nbsp;
+      Jingmin Wang* &nbsp;&middot;&nbsp;
+      Nicholas Rhinehart
+    </div>
+    <div class="affiliation-line">* Equal contribution &nbsp;·&nbsp; Learning, Embodied Autonomy, and Forecasting (LEAF) Lab</div>
+    <div class="hero-actions">
+      <a href="https://github.com/MohamedGNabail/ubp2/" class="btn btn-primary" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Code
+      </a>
+      <a href="#" class="btn btn-outline">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Paper (arXiv)
+      </a>
+    </div>
+
+    <div style="margin-top:1.4rem; display:flex; gap:0.45rem; flex-wrap:wrap;">
+      <span class="tag tag-blue">Preference-Based RL</span>
+      <span class="tag tag-blue">Model-Based RL</span>
+      <span class="tag tag-purple">Epistemic Uncertainty</span>
+      <span class="tag tag-green">Meta-World</span>
+      <span class="tag tag-green">Sublinear Regret</span>
+    </div>
+
+    <!-- TEASER FIGURE -->
+    <!--
+      INSTRUCTIONS: Replace the placeholder below with your teaser figure.
+      Option A — image file:  add src="assets/teaser.png" to the <img> tag and remove the .teaser-placeholder-label div
+      Option B — keep placeholder and swap later
+    -->
+    <div class="teaser-wrap">
+      <figure class="teaser-figure">
+        <div class="teaser-img-slot" id="teaser-slot">
+          <!-- TO ADD YOUR FIGURE: uncomment and update the line below -->
+          <!-- <img src="assets/teaser.png" alt="UBP² teaser figure"> -->
+          <div class="teaser-placeholder-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Place teaser figure here &mdash; <code style="font-size:0.68rem">assets/teaser.png</code>
+          </div>
+        </div>
+        <figcaption class="teaser-caption">
+          <strong>Figure 1.</strong> Illustration of planning in UBP². The agent rolls out the dynamics model to generate imagined trajectories. The planner selects the trajectory maximizing expected return and epistemic uncertainty, then executes only the first action a<sub>t=1</sub>.
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ABSTRACT -->
+<section id="abstract">
+  <div class="container reveal">
+    <div class="section-eyebrow">Abstract</div>
+    <h2>Overview</h2>
+    <div class="abstract-card">
+      <p>Preference-based RL provides an approach to learning reward models from pairwise comparisons of behaviors, bypassing the need for explicit reward design. However, existing methods typically rely on passive data collection and suffer from poor sample efficiency, especially during the early stages of learning.</p>
+      <p>We introduce a model-based approach that actively directs exploration by jointly reasoning over uncertainties in the reward, dynamics, and value functions. Our method, <strong>Uncertainty-Balanced Preference Planning (UBP²)</strong>, uses ensembles of reward, dynamics, and value function models to evaluate candidate trajectories according to a unified score that combines expected reward, terminal value, and epistemic uncertainty.</p>
+      <p style="margin-bottom:0">Planning under this objective yields an explicit tradeoff between exploitation and information acquisition without requiring ad hoc exploration heuristics. Under standard regularity assumptions, we establish sublinear regret guarantees for both finite-horizon and infinite-horizon settings.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-num">76.0</span>
+        <h3 style="font-size:0.8rem; margin-bottom:0.3rem">Avg. IQM Success</h3>
+        <p>across 10 MetaWorld tasks</p>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">1.20</span>
+        <h3 style="font-size:0.8rem; margin-bottom:0.3rem">Average Rank</h3>
+        <p>best across all tasks vs. baselines</p>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">9/10</span>
+        <h3 style="font-size:0.8rem; margin-bottom:0.3rem">Tasks Won</h3>
+        <p>higher sample efficiency</p>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">𝒪(√N)</span>
+        <h3 style="font-size:0.8rem; margin-bottom:0.3rem">Regret Bound</h3>
+        <p>sublinear, both horizons</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- METHOD -->
+<section id="method">
+  <div class="container reveal">
+    <div class="section-eyebrow">Method</div>
+    <h2>UBP² Framework</h2>
+    <p>UBP² jointly learns ensembles of reward, dynamics, and value models from preference feedback and online interaction. A model-predictive controller plans over imagined trajectories using a unified optimistic objective; once the preference budget is exhausted, control passes to the learned policy.</p>
+
+    <!-- Method figure: swap placeholder for your Figure 2 / pipeline diagram -->
+    <!--
+      INSTRUCTIONS: To add Figure 2 from the paper (the pipeline diagram):
+      Place the image at assets/method.png and uncomment the <img> line below.
+    -->
+    <figure class="method-figure">
+      <div class="method-img-slot">
+        <!-- <img src="assets/method.png" alt="UBP² method diagram"> -->
+        <div class="teaser-placeholder-label" style="flex-direction:column; gap:0.4rem; text-align:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Method / pipeline figure &mdash; <code style="font-size:0.68rem">assets/method.png</code>
+        </div>
+      </div>
+      <div class="fig-caption">
+        <strong>Figure 2.</strong> UBP² uses ensembles of reward (r<sub>θ</sub>), dynamics (p<sub>φ</sub>), and value (q<sub>ψ</sub>) models to perform optimistic planning over imagined trajectories. Preferences are selected optimistically from executed trajectories and used to jointly train all three model ensembles.
+      </div>
+    </figure>
+
+    <!-- Planning objective -->
+    <h3 style="margin-top:2rem">Unified Planning Objective</h3>
+    <div class="eq-box">
+      <span class="eq-label">Eq. (1)</span>
+      arg max<sub>μ,σ</sub> &nbsp; 𝔼<sub>a</sub> [ &nbsp;
+      Σ<sub>t=0</sub><sup>H−1</sup> γ<sup>t</sup> (
+        <span class="ev">μ<sup>r</sup><sub>n</sub></span>(ŝ,a)
+        + <span class="ek">λ<sub>r</sub></span>·<span class="ev">σ<sup>r</sup><sub>epi</sub></span>(ŝ,a)
+        + <span class="ek">λ<sub>d</sub></span>·<span class="ev">σ<sup>d</sup><sub>epi</sub></span>(ŝ,a)
+      ) &nbsp;+&nbsp; γ<sup>H</sup>(
+        <span class="ev">μ<sup>q</sup><sub>n</sub></span>(ŝ<sub>H</sub>,a<sub>H</sub>)
+        + <span class="ek">λ<sub>q</sub></span>·<span class="ev">σ<sup>q</sup><sub>epi</sub></span>(ŝ<sub>H</sub>,a<sub>H</sub>)
+      ) ]
+    </div>
+    <p>The coefficients λ<sub>r</sub>, λ<sub>d</sub>, λ<sub>q</sub> are automatically tuned online via a Polyak-averaged target policy, eliminating manual tuning of the exploration–exploitation balance.</p>
+
+    <!-- Algorithm -->
+    <h3 style="margin-top:2rem">Algorithm</h3>
+    <div class="algo-box">
+      <div class="algo-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        ALGORITHM 1 &nbsp;·&nbsp; UBP²
+      </div>
+      <div class="algo-body">
+        <div><span class="al">1</span><span class="ak">Input:</span> Replay buffer ℬ, preference buffer 𝒫</div>
+        <div><span class="al">2</span><span class="ak">Params:</span> model ensembles (p<sub>φ</sub>, r<sub>θ</sub>, q<sub>ψ</sub>), policy π<sup>learn</sup></div>
+        <div><span class="al">3</span><span class="ak">Init:</span> t ← 0, n<sub>pref</sub> ← 0, s ← env.reset()</div>
+        <div><span class="al">4</span><span class="ak">while</span> t ≤ N<sub>T</sub> <span class="ak">do</span></div>
+        <div class="i1"><span class="al">5</span><span class="ak">if</span> n<sub>pref</sub> &lt; N<sub>pref</sub> <span class="ak">then</span></div>
+        <div class="i2"><span class="al">6</span>a ← <span class="af">MPC</span>(s; λ<sub>r</sub>, λ<sub>d</sub>, λ<sub>q</sub>) <span class="ac">// uncertainty-guided optimistic planning</span></div>
+        <div class="i1"><span class="al">7</span><span class="ak">else</span></div>
+        <div class="i2"><span class="al">8</span>a ← π<sup>learn</sup>(s) <span class="ac">// switch to learned policy</span></div>
+        <div class="i1"><span class="al">9</span><span class="ak">end if</span></div>
+        <div class="i1"><span class="al">10</span>(s′, r) ← env.step(a) ; ℬ ← ℬ ∪ (s, a) ; t ← t + 1</div>
+        <div class="i1"><span class="al">11</span><span class="af">Update</span> p<sub>φ</sub>, r<sub>θ</sub>, q<sub>ψ</sub>, π<sup>learn</sup>, {λ<sub>r</sub>, λ<sub>d</sub>, λ<sub>q</sub>}</div>
+        <div class="i1"><span class="al">12</span><span class="ak">if</span> episode done <span class="ak">and</span> n<sub>pref</sub> &lt; N<sub>pref</sub> <span class="ak">then</span></div>
+        <div class="i2"><span class="al">13</span>𝒫 ← 𝒫 ∪ <span class="af">OptimisticPrefSelect</span>(ℬ, r<sub>θ</sub>)</div>
+        <div class="i1"><span class="al">14</span><span class="ak">end if</span></div>
+        <div><span class="al">15</span><span class="ak">end while</span></div>
+      </div>
+    </div>
+
+    <!-- Contributions -->
+    <h3 style="margin-top:2.5rem">Contributions</h3>
+    <ul class="contrib-list" style="margin-top:0.8rem">
+      <li><p><strong>Unified optimistic planning objective</strong> combining predicted cumulative return with epistemic uncertainty over reward, dynamics, and value — outperforming any single-component uncertainty approach.</p></li>
+      <li><p><strong>Optimistic preference query strategy</strong> that globally ranks candidate trajectory segment pairs by predicted reward plus reward-model epistemic uncertainty, rather than sampling locally.</p></li>
+      <li><p><strong>Sublinear regret bounds</strong> (finite- and infinite-horizon) with explicit dependence on the maximum information gain Γ<sub>d,N</sub> and Γ<sub>r,N</sub> of the dynamics and reward kernels.</p></li>
+      <li><p><strong>Strong empirical results</strong> on 10 Meta-World tasks — substantially higher sample efficiency than model-free (RUNE, MRN) and non-optimistic model-based baselines.</p></li>
+    </ul>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="container reveal">
+    <div class="section-eyebrow">Experiments</div>
+    <h2>Quantitative Results</h2>
+    <p>Evaluated on 10 MetaWorld manipulation tasks with proprioceptive observations. We report Interquartile Mean (IQM) success rate over 1M environment steps. Feedback budgets reflect numbers commonly used in prior work.</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'tab-main')">Main Results</button>
+      <button class="tab" onclick="switchTab(this,'tab-ablation')">Ablation Study</button>
+      <button class="tab" onclick="switchTab(this,'tab-pref')">Pref. Selection</button>
+      <button class="tab" onclick="switchTab(this,'tab-horizon')">Planning Horizon</button>
+    </div>
+
+    <div id="tab-main" class="tab-panel active">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th><th>Door Close</th><th>Window Close</th><th>Handle Press</th>
+              <th>Coffee Button</th><th>Faucet Open</th><th>Door Open</th>
+              <th>Door Unlock</th><th>Sweep Into</th><th>Drawer Open</th><th>Hammer</th>
+              <th>Avg ↑</th><th>Rank ↓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="best">
+              <td><strong>UBP²</strong></td>
+              <td class="bold-cell">97.8</td><td class="bold-cell">93.0</td><td class="bold-cell">93.4</td>
+              <td>86.2</td><td class="bold-cell">89.4</td><td class="bold-cell">70.5</td>
+              <td class="bold-cell">85.6</td><td>36.3</td><td class="bold-cell">77.5</td><td class="bold-cell">29.9</td>
+              <td class="bold-cell">76.0</td><td><span class="rank-badge">1.20</span></td>
+            </tr>
+            <tr>
+              <td>MBP</td>
+              <td>95.5</td><td>74.6</td><td>90.7</td><td>75.3</td><td>83.4</td>
+              <td>61.2</td><td>85.1</td><td>1.1</td><td>43.2</td><td>14.8</td>
+              <td>62.5</td><td>2.60</td>
+            </tr>
+            <tr>
+              <td>RUNE</td>
+              <td>91.5</td><td>85.2</td><td>84.5</td><td class="bold-cell">90.4</td><td>83.1</td>
+              <td>41.7</td><td>56.1</td><td class="bold-cell">35.5</td><td>35.9</td><td>4.6</td>
+              <td>60.8</td><td>3.10</td>
+            </tr>
+            <tr>
+              <td>MRN</td>
+              <td>94.2</td><td>84.9</td><td>81.5</td><td>87.7</td><td>80.1</td>
+              <td>48.2</td><td>65.6</td><td>28.3</td><td>38.1</td><td>7.5</td>
+              <td>61.6</td><td>3.10</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fn">* Asterisks (omitted here for brevity) denote statistically significant improvements under Wilcoxon signed-rank test (p &lt; 0.05). Best per-column in bold.</p>
+    </div>
+
+    <div id="tab-ablation" class="tab-panel">
+      <p>Config = (Reward Unc. | Dynamics Unc. | Value Unc. | Opt. Pref. Selection). 1 = enabled, 0 = disabled.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Config</th><th>Door Close</th><th>Faucet Open</th><th>Door Open</th><th>Drawer Open</th><th>Avg ↑</th><th>Regret ↓</th></tr></thead>
+          <tbody>
+            <tr class="best"><td class="bold-cell">1111 (Full UBP²)</td><td class="bold-cell">97.8</td><td class="bold-cell">89.5</td><td>73.0</td><td class="bold-cell">77.7</td><td class="bold-cell">76.1</td><td class="bold-cell">11.5</td></tr>
+            <tr><td>0111</td><td>96.7</td><td>82.8</td><td class="bold-cell">84.5</td><td>68.3</td><td>75.3</td><td>15.8</td></tr>
+            <tr><td>1011</td><td>95.9</td><td>89.7</td><td>58.5</td><td>58.4</td><td>69.6</td><td>26.0</td></tr>
+            <tr><td>1001</td><td>94.8</td><td>90.3</td><td>67.7</td><td>44.0</td><td>67.4</td><td>33.7</td></tr>
+            <tr><td>0000 (MBP)</td><td>95.6</td><td>83.6</td><td>64.7</td><td>43.7</td><td>63.8</td><td>37.8</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-pref" class="tab-panel">
+      <p>Optimistic preference selection consistently outperforms entropy- and disagreement-based strategies.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Preference Selection Strategy</th><th>Drawer Open</th><th>Door Open</th></tr></thead>
+          <tbody>
+            <tr class="best"><td class="bold-cell">UBP²-optimistic (ours)</td><td class="bold-cell">78.2</td><td class="bold-cell">74.1</td></tr>
+            <tr><td>UBP²-disagreement</td><td>75.2</td><td>45.5</td></tr>
+            <tr><td>UBP²-entropy</td><td>42.0</td><td>0.1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-horizon" class="tab-panel">
+      <p>Consistent gains when increasing from horizon 7 to 11; performance saturates or slightly regresses at 15.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Horizon H</th><th>Coffee Button</th><th>Door Open</th><th>Door Unlock</th></tr></thead>
+          <tbody>
+            <tr><td>7</td><td>77.5</td><td>74.1</td><td>75.7</td></tr>
+            <tr class="best"><td class="bold-cell">11</td><td class="bold-cell">88.8</td><td class="bold-cell">79.3</td><td class="bold-cell">86.5</td></tr>
+            <tr><td>15</td><td>92.4</td><td>68.6</td><td>74.1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- VIDEOS -->
+<section id="videos">
+  <div class="container-wide reveal">
+    <div class="section-eyebrow">Videos</div>
+    <h2>Qualitative Results</h2>
+    <p>Rollout videos for each MetaWorld task. Numbers in parentheses indicate the maximum preference feedback budget used. Replace the placeholder slots with your <code style="font-family:var(--mono); font-size:0.8em; background:var(--bg2); padding:0.1em 0.4em; border-radius:3px; border:1px solid var(--border)">assets/videos/task_name.mp4</code> files.</p>
+
+    <!--
+      INSTRUCTIONS: For each task card below, add your video by:
+      1. Placing your .mp4 at e.g.  assets/videos/door_close.mp4
+      2. Uncommenting the <video> tag inside that card's .video-slot
+      The placeholder play-button and grid disappear automatically when a <video> is present.
+    -->
+
+    <div class="video-grid">
+
+      <!-- Door Close -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/door_close.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">door_close.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Door Close</div>
+          <div class="task-budget">Budget: 500 queries</div>
+          <div class="task-score">UBP²: 97.8 IQM</div>
+        </div>
+      </div>
+
+      <!-- Window Close -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/window_close.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">window_close.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Window Close</div>
+          <div class="task-budget">Budget: 500 queries</div>
+          <div class="task-score">UBP²: 93.0 IQM</div>
+        </div>
+      </div>
+
+      <!-- Handle Press -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/handle_press.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">handle_press.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Handle Press</div>
+          <div class="task-budget">Budget: 1,000 queries</div>
+          <div class="task-score">UBP²: 93.4 IQM</div>
+        </div>
+      </div>
+
+      <!-- Coffee Button -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/coffee_button.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">coffee_button.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Coffee Button</div>
+          <div class="task-budget">Budget: 1,000 queries</div>
+          <div class="task-score">UBP²: 86.2 IQM</div>
+        </div>
+      </div>
+
+      <!-- Faucet Open -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/faucet_open.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">faucet_open.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Faucet Open</div>
+          <div class="task-budget">Budget: 2,000 queries</div>
+          <div class="task-score">UBP²: 89.4 IQM</div>
+        </div>
+      </div>
+
+      <!-- Door Open -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/door_open.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">door_open.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Door Open</div>
+          <div class="task-budget">Budget: 2,000 queries</div>
+          <div class="task-score">UBP²: 70.5 IQM</div>
+        </div>
+      </div>
+
+      <!-- Door Unlock -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/door_unlock.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">door_unlock.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Door Unlock</div>
+          <div class="task-budget">Budget: 2,500 queries</div>
+          <div class="task-score">UBP²: 85.6 IQM</div>
+        </div>
+      </div>
+
+      <!-- Sweep Into -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/sweep_into.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">sweep_into.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Sweep Into</div>
+          <div class="task-budget">Budget: 5,000 queries</div>
+          <div class="task-score">UBP²: 36.3 IQM</div>
+        </div>
+      </div>
+
+      <!-- Drawer Open -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/drawer_open.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">drawer_open.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Drawer Open</div>
+          <div class="task-budget">Budget: 5,000 queries</div>
+          <div class="task-score">UBP²: 77.5 IQM</div>
+        </div>
+      </div>
+
+      <!-- Hammer -->
+      <div class="video-card">
+        <div class="video-slot">
+          <!-- <video src="assets/videos/hammer.mp4" autoplay loop muted playsinline></video> -->
+          <span class="vid-label">hammer.mp4</span>
+        </div>
+        <div class="video-info">
+          <div class="task-name">Hammer</div>
+          <div class="task-budget">Budget: 10,000 queries</div>
+          <div class="task-score">UBP²: 29.9 IQM</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- THEORY -->
+<section id="theory">
+  <div class="container reveal">
+    <div class="section-eyebrow">Theory</div>
+    <h2>Theoretical Guarantees</h2>
+    <p>Under standard RKHS/GP regularity assumptions with well-calibrated models, UBP² achieves sublinear cumulative regret in the number of environment interaction episodes.</p>
+
+    <div class="eq-box">
+      <span class="eq-label">Theorem 5.8</span>
+      <strong>Infinite-Horizon Regret Bound</strong><br><br>
+      R<sub>γ,N</sub> &nbsp;≤&nbsp; 𝒪(&nbsp;H³ √N &nbsp;(&nbsp;<span class="ev">Γ<sup>3/2</sup><sub>d,N</sub></span> log N &nbsp;+&nbsp; <span class="ev">Γ<sup>3/2</sup><sub>r,N</sub></span> log N&nbsp;) &nbsp;+&nbsp; e<sub>q,N</sub>&nbsp;)
+    </div>
+
+    <p>Γ<sub>d,N</sub> and Γ<sub>r,N</sub> are the maximum information gains of the dynamics and reward kernels; e<sub>q,N</sub> = Σ ε<sub>q,n</sub> accounts for Q-function sub-optimality. When e<sub>q,N</sub> is sublinear, overall regret is sublinear.</p>
+
+    <div class="theory-grid">
+      <div class="theory-card">
+        <h3>Kernel-Specific Rates</h3>
+        <p><strong>Linear:</strong> &nbsp;𝒪(H³ √N · d<sub>x</sub><sup>3/2</sup>)</p>
+        <p><strong>RBF:</strong> &nbsp;&nbsp;&nbsp;&nbsp;𝒪(H³ √N · log<sup>3/2(d+1)</sup> N)</p>
+        <p><strong>Matérn:</strong> &nbsp;𝒪(H³ · N<sup>½ + 3d/(2(2ν+d))</sup>)</p>
+        <p style="margin-bottom:0">Both linear and RBF remain strictly sublinear for fixed state and action dimension.</p>
+      </div>
+      <div class="theory-card">
+        <h3>Key Assumptions</h3>
+        <p>A5.1 &nbsp; Continuous, bounded dynamics and reward</p>
+        <p>A5.2 &nbsp; RKHS regularity of dynamics &amp; reward</p>
+        <p>A5.3 &nbsp; Q-function sub-optimality bounded by ε<sub>q,n</sub></p>
+        <p style="margin-bottom:0">A5.4 &nbsp; Epistemic Q-uncertainty via GP uncertainty propagation</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CITATION -->
+<section id="citation">
+  <div class="container reveal">
+    <div class="section-eyebrow">Citation</div>
+    <h2>Cite This Work</h2>
+    <div class="citation-box">
+      <button class="copy-btn" onclick="copyCitation(this)">COPY</button>
+      <span id="cite-text">@article{nabail2025ubp2,<br>
+&nbsp;&nbsp;title   = {UBP2: Uncertainty-Balanced Preference Planning},<br>
+&nbsp;&nbsp;author  = {Nabail, Mohamed and Cheng, Leo and Wang, Jingmin<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and Rhinehart, Nicholas},<br>
+&nbsp;&nbsp;institution = {University of Toronto, LEAF Lab},<br>
+&nbsp;&nbsp;year    = {2025},<br>
+&nbsp;&nbsp;url     = {https://github.com/MohamedGNabail/ubp2/}<br>
+}</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    UBP² &nbsp;·&nbsp; LEAF Lab, University of Toronto &nbsp;·&nbsp;
+    <a href="https://github.com/MohamedGNabail/ubp2/" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Tabs
+function switchTab(btn, id) {
+  btn.closest('section').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.closest('section').querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// Copy citation
+function copyCitation(btn) {
+  const text = document.getElementById('cite-text').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'COPIED!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2200);
+  });
+}
+
+// Video: hide play-button overlay when real video loads
+document.querySelectorAll('.video-slot video').forEach(v => {
+  v.closest('.video-slot').classList.add('has-video');
+});
+</script>
+</body>
+</html>
