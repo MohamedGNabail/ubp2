@@ -154,7 +154,7 @@ h1 {
 }
 .teaser-img-slot {
   width: 100%;
-  aspect-ratio: 16/6;
+  aspect-ratio: 800/422;
   background: var(--bg2);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 0.7rem;
@@ -162,13 +162,7 @@ h1 {
   position: relative; overflow: hidden;
 }
 .teaser-img-slot::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.5;
+  display: none;
 }
 .teaser-img-slot img {
   width: 100%; height: 100%; object-fit: cover;
@@ -239,7 +233,7 @@ p { color: var(--text-mid); font-size: 0.93rem; margin-bottom: 0.9rem; line-heig
   box-shadow: var(--shadow); margin: 1.5rem 0;
 }
 .method-img-slot {
-  width: 100%; aspect-ratio: 16/7;
+  width: 100%; aspect-ratio: 800/422;
   background: var(--bg2);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 0.7rem;
@@ -247,12 +241,7 @@ p { color: var(--text-mid); font-size: 0.93rem; margin-bottom: 0.9rem; line-heig
   position: relative; overflow: hidden;
 }
 .method-img-slot::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 40px 40px; opacity: 0.5;
+  display: none;
 }
 .method-img-slot img { width:100%; height:100%; object-fit:contain; display:block; }
 .fig-caption {
